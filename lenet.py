@@ -14,7 +14,7 @@ class LeNet5(nn.Module):
         self.fc1 = nn.Linear(in_features=120, out_features=84)
         self.fc2 = nn.Linear(in_features=84, out_features=_NUM_CLASSES)
 
-        self.pool = nn.AvgPool2d(kernel_size=2)
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
         self.activ = nn.Tanh()
 
         self.epoch = 0
@@ -26,9 +26,9 @@ class LeNet5(nn.Module):
         x = self.pool(x)
         x = self.activ(self.conv3(x))
 
-        x = x.reshape(x.shape[0], -1)
+        x = x.flatten(1)
         x = self.activ(self.fc1(x))
-        x = self.activ(self.fc2(x))
+        x = self.fc2(x)
 
         return x
 
