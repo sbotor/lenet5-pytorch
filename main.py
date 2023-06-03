@@ -7,7 +7,7 @@ import torch
 MODEL_PATH = 'model.pt'
 
 def _train_and_save(trainer: Trainer):
-    trainer.train(10)
+    trainer.train(5)
 
     LeNet5.save(MODEL_PATH, trainer.model, trainer.optimizer)
 
