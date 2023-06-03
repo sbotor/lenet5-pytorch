@@ -1,34 +1,40 @@
 from lenet import LeNet5
-from utils import Trainer, load_trainer
+from testing import Tester
+from training import Trainer
+from utils import LEARNING_RATE, print_model_info
 import torch
 
-LEARNING_RATE = 0.001
+MODEL_PATH = 'model.pt'
+
+def _train_and_save(trainer: Trainer):
+    trainer.train(10)
+
+    LeNet5.save(MODEL_PATH, trainer.model, trainer.optimizer)
 
 def create_and_train():
     model = LeNet5()
     optim = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
     trainer = Trainer(model, optim)
-
-    trainer.train(10)
-
-    LeNet5.save('model.pt', model, optim, trainer.loss_history)
+    
+    _train_and_save(trainer)
 
 def load_and_train():
-    trainer = load_trainer('model.pt')
+    trainer = Trainer.load(MODEL_PATH)
 
-    trainer.train(10)
+    _train_and_save(trainer)
 
-    LeNet5.save('model.pt', trainer.model, trainer.optimizer, trainer.loss_history)
+def test():
+    tester = Tester.load(MODEL_PATH)
+    tester.test()
 
 def print_data():
-    model, _, loss_history = LeNet5.load('model.pt')
-
-    print(f'Epoch: {model.epoch}')
-    print(f'Loss history: {loss_history}')
+    model, _ = LeNet5.load(MODEL_PATH)
+    print_model_info(model)
 
 def main():
-    #load_and_train()
-    create_and_train();
+    load_and_train()
+    #create_and_train()
+    test()
     print_data()
 
 

@@ -3,6 +3,7 @@ import torch
 
 _NUM_CLASSES = 10
 
+
 class LeNet5(nn.Module):
     def __init__(self):
         super().__init__()
@@ -18,6 +19,7 @@ class LeNet5(nn.Module):
         self.activ = nn.Tanh()
 
         self.epoch = 0
+        self.loss_history = []
 
     def forward(self, x: torch.Tensor):
         x = self.activ(self.conv1(x))
@@ -33,11 +35,11 @@ class LeNet5(nn.Module):
         return x
 
     @staticmethod
-    def save(path: str, model: 'LeNet5', optimizer, loss_history):
+    def save(path: str, model: 'LeNet5', optimizer,):
         state = {
             'model_state': model.state_dict(),
             'optimizer_state': optimizer.state_dict(),
-            'loss_history': loss_history,
+            'loss_history': model.loss_history,
             'epoch': model.epoch
         }
 
@@ -50,10 +52,9 @@ class LeNet5(nn.Module):
 
         model.load_state_dict(state['model_state'])
         model.epoch = state['epoch']
-        
+        model.loss_history = state['loss_history']
+
         optimizer = torch.optim.Adam(model.parameters())
         optimizer.load_state_dict(state['optimizer_state'])
 
-        loss_history = state['loss_history']
-
-        return model, optimizer, loss_history
+        return model, optimizer
