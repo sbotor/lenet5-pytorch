@@ -1,9 +1,22 @@
+from torch import Tensor
 import torch.nn as nn
 import torch
 
-_NUM_CLASSES = 10
+_TANH_SCALE = 1.7159
 
 class LeNet5(nn.Module):
+    NUM_CLASSES = 10
+
+    class _ScaledTanh(nn.Tanh):
+        def __init__(self, scale: float = 1):
+            super().__init__()
+
+            self.scale = scale
+
+        def forward(self, input: Tensor) -> Tensor:
+            input = super().forward(input)
+            return input.mul(self.scale)
+
     def __init__(self):
         super().__init__()
 
@@ -12,12 +25,13 @@ class LeNet5(nn.Module):
         self.conv3 = nn.Conv2d(in_channels=16, out_channels=120, kernel_size=5)
 
         self.fc1 = nn.Linear(in_features=120, out_features=84)
-        self.fc2 = nn.Linear(in_features=84, out_features=_NUM_CLASSES)
+        self.fc2 = nn.Linear(in_features=84, out_features=LeNet5.NUM_CLASSES)
 
-        self.pool = nn.AvgPool2d(kernel_size=2)
-        self.activ = nn.Tanh()
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.activ = self._ScaledTanh(_TANH_SCALE)
 
         self.epoch = 0
+        self.loss_history = []
 
     def forward(self, x: torch.Tensor):
         x = self.activ(self.conv1(x))
@@ -26,18 +40,18 @@ class LeNet5(nn.Module):
         x = self.pool(x)
         x = self.activ(self.conv3(x))
 
-        x = x.reshape(x.shape[0], -1)
+        x = x.flatten(1)
         x = self.activ(self.fc1(x))
-        x = self.activ(self.fc2(x))
+        x = self.fc2(x)
 
         return x
 
     @staticmethod
-    def save(path: str, model: 'LeNet5', optimizer, loss_history):
+    def save(path: str, model: 'LeNet5', optimizer,):
         state = {
             'model_state': model.state_dict(),
             'optimizer_state': optimizer.state_dict(),
-            'loss_history': loss_history,
+            'loss_history': model.loss_history,
             'epoch': model.epoch
         }
 
@@ -50,10 +64,9 @@ class LeNet5(nn.Module):
 
         model.load_state_dict(state['model_state'])
         model.epoch = state['epoch']
-        
+        model.loss_history = state['loss_history']
+
         optimizer = torch.optim.Adam(model.parameters())
         optimizer.load_state_dict(state['optimizer_state'])
 
-        loss_history = state['loss_history']
-
-        return model, optimizer, loss_history
+        return model, optimizer
