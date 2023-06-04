@@ -14,7 +14,6 @@ class CheckpointTrainer:
         self.tester = Tester(model)
 
     def start(self, epochs: int, interval: int, silent = False):
-
         self._epochs = epochs
         self._interval = interval
 
@@ -28,7 +27,6 @@ class CheckpointTrainer:
         
 
     def _loop(self, it: int, silent = False) -> str:
-        # trainer = Trainer.load(modelPath)
 
         if(it*self._interval > self._epochs): #last iteration
             self.trainer.train(it*self._interval - self._epochs)
@@ -41,7 +39,6 @@ class CheckpointTrainer:
         modelFileName = f"{self.pathBase}/model_{epochCompletness}.pt"
         LeNet5.save(modelFileName, self.trainer.model, self.trainer.optimizer)
 
-        # tester = Tester(trainer.model)
         self.tester.model = self.trainer.model
         preds, labels = self.tester.test()
 
@@ -59,8 +56,6 @@ class CheckpointTrainer:
         f1 = Tester.getF1Score(preds, labels)
 
         self._appendMetricsToCSV(preds, labels, trainedUntil)
-
-        return modelFileName
     
     def _appendMetricsToCSV(self, preds:torch.Tensor, labels:torch.Tensor, epoch:int):
         metricPath = f"{self.pathBase}/Metrics.csv"
@@ -76,7 +71,6 @@ class CheckpointTrainer:
         prec = Tester.getPrecision(preds, labels)
         f1 = Tester.getF1Score(preds, labels)
 
-        # metricPath = f"{filePath}/Metrics.csv"
         fields=[epoch, acc, prec, rec, f1]
         with open(metricPath, 'a') as file:
             wr = writer(file)
