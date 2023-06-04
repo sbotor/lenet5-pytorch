@@ -11,8 +11,8 @@ class CheckpointTrainer:
         self.interval = interval
 
     def start(self, modelPath:str, silent = False):
-        filePath = "checkpoints/" + time.strftime("%Y%m%d_%H%M")+"/"
-        metricPath = filePath + "Metrics.csv"
+        filePath = f'checkpoints/{time.strftime("%Y%m%d_%H%M")}'
+        metricPath = f"{filePath}/Metrics.csv"
         headers = ['Epoch', 'Accuracy', 'Precision', 'Recall', 'F1']
         os.makedirs(os.path.dirname(metricPath), exist_ok=True)
         with open(metricPath, 'w') as file:
@@ -38,14 +38,14 @@ class CheckpointTrainer:
 
         trainedTo = min(self.epochs, it*self.interval)
 
-        epochCompletness = "_" + str(trainedTo) + "_" + str(self.epochs)
-        fileName = filePath + "model" + epochCompletness + ".pt"
+        epochCompletness = f"{trainedTo}_{self.epochs}"
+        fileName = f"{filePath}/model_{epochCompletness}.pt"
         LeNet5.save(fileName, trainer.model, trainer.optimizer)
 
         tester = Tester(trainer.model)
         preds, labels = tester.test()
 
-        predPath = filePath + "Predictions" + epochCompletness + ".pt"
+        predPath = f"{filePath}/Predictions_{epochCompletness}.pt"
         torch.save(preds, predPath)
 
         if(not silent):
@@ -56,7 +56,7 @@ class CheckpointTrainer:
         prec = Tester.getPrecision(preds, labels)
         f1 = Tester.getF1Score(preds, labels)
 
-        metricPath = filePath + "Metrics.csv"
+        metricPath = f"{filePath}/Metrics.csv"
         fields=[trainedTo, acc, prec, rec, f1]
         with open(metricPath, 'a') as file:
             wr = writer(file)
