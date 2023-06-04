@@ -3,7 +3,7 @@ from torchvision import datasets
 from torch.utils.data import DataLoader
 from lenet import LeNet5
 
-from torcheval.metrics.functional import multiclass_accuracy
+from torcheval.metrics.functional import multiclass_accuracy, multiclass_precision, multiclass_f1_score, multiclass_recall
 
 from utils import BATCH_SIZE, DATASET_TRANSFORM, DEVICE, format_accuracy, get_criterion
 
@@ -58,6 +58,26 @@ class Tester:
             self._dataset, batch_size=BATCH_SIZE, shuffle=True)
 
         return self._loader
+    
+    @staticmethod
+    def getAccuracy(preds: torch.Tensor, labels: torch.Tensor):
+        acc = 100 * multiclass_accuracy(preds, labels).item()
+        return acc
+    
+    @staticmethod
+    def getPrecision(preds: torch.Tensor, labels: torch.Tensor):
+        prec = 100*multiclass_precision(preds, labels).item()
+        return prec
+    
+    @staticmethod
+    def getRecall(preds: torch.Tensor, labels: torch.Tensor):
+        rec = 100 * multiclass_recall(preds, labels).item()
+        return rec
+
+    @staticmethod
+    def getF1Score(preds: torch.Tensor, labels: torch.Tensor):
+        f1 = 100 * multiclass_f1_score(preds, labels).item()
+        return f1
 
     @staticmethod
     def load(path: str):
