@@ -19,8 +19,12 @@ class CheckpointTrainer:
             wr = writer(file)
             wr.writerow(headers)
 
-        for i in range(1, self.epochs//self.interval + 1):
-            modelPath = self.loop(i, modelPath, filePath)
+        iterations = self.epochs//self.interval
+        if(self.epochs%self.interval != 0):
+            iterations+=1
+
+        for i in range(iterations):
+            modelPath = self.loop(i+1, modelPath, filePath)
         
 
     def loop(self, it: int, modelPath: str, filePath: str) -> str:
@@ -28,7 +32,7 @@ class CheckpointTrainer:
         trainer.silent = False
 
         if(it*self.interval > self.epochs): #last iteration
-            trainer.train(self.epochs-it*self.interval)
+            trainer.train(it*self.interval - self.epochs)
         else:
             trainer.train(self.interval)
 
