@@ -10,7 +10,7 @@ class CheckpointTrainer:
         self.epochs = epochs
         self.interval = interval
 
-    def start(self, modelPath:str):
+    def start(self, modelPath:str, silent = False):
         filePath = "checkpoints/" + time.strftime("%Y%m%d_%H%M")+"/"
         metricPath = filePath + "Metrics.csv"
         headers = ['Epoch', 'Accuracy', 'Precision', 'Recall', 'F1']
@@ -24,12 +24,12 @@ class CheckpointTrainer:
             iterations+=1
 
         for i in range(iterations):
-            modelPath = self.loop(i+1, modelPath, filePath)
+            modelPath = self.loop(i+1, modelPath, filePath, silent)
         
 
-    def loop(self, it: int, modelPath: str, filePath: str) -> str:
+    def loop(self, it: int, modelPath: str, filePath: str, silent = False) -> str:
         trainer = Trainer.load(modelPath)
-        trainer.silent = False
+        trainer.silent = True
 
         if(it*self.interval > self.epochs): #last iteration
             trainer.train(it*self.interval - self.epochs)
@@ -47,6 +47,9 @@ class CheckpointTrainer:
 
         predPath = filePath + "Predictions" + epochCompletness + ".pt"
         torch.save(preds, predPath)
+
+        if(not silent):
+            print(f'Checkpoint {it} | {trainedTo}/{self.epochs} epochs')
 
         acc = Tester.getAccuracy(preds, labels)
         rec = Tester.getRecall(preds, labels)
