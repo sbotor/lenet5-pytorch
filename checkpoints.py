@@ -1,3 +1,4 @@
+from math import ceil
 import time, torch, os
 from lenet import LeNet5
 from training import Trainer
@@ -6,60 +7,77 @@ from csv import writer
 
 class CheckpointTrainer:
 
-    def __init__(self, epochs: int, interval: int):
-        self.epochs = epochs
-        self.interval = interval
+    def __init__(self, model: torch.Tensor, optimizer):
+        self.model = model
+        self.optimizer = optimizer
+        self.trainer = Trainer(model, optimizer, True)
+        self.tester = Tester(model)
 
-    def start(self, modelPath:str, silent = False):
-        filePath = f'checkpoints/{time.strftime("%Y%m%d_%H%M")}'
-        metricPath = f"{filePath}/Metrics.csv"
-        headers = ['Epoch', 'Accuracy', 'Precision', 'Recall', 'F1']
-        os.makedirs(os.path.dirname(metricPath), exist_ok=True)
-        with open(metricPath, 'w') as file:
-            wr = writer(file)
-            wr.writerow(headers)
+    def start(self, epochs: int, interval: int, silent = False):
 
-        iterations = self.epochs//self.interval
-        if(self.epochs%self.interval != 0):
-            iterations+=1
+        self._epochs = epochs
+        self._interval = interval
+
+        self.pathBase = f'checkpoints/{time.strftime("%Y%m%d_%H%M")}'
+        os.makedirs(self.pathBase, exist_ok=True)
+
+        iterations = ceil(epochs/interval)
 
         for i in range(iterations):
-            modelPath = self.loop(i+1, modelPath, filePath, silent)
+            self._loop(i+1, silent)
         
 
-    def loop(self, it: int, modelPath: str, filePath: str, silent = False) -> str:
-        trainer = Trainer.load(modelPath)
-        trainer.silent = True
+    def _loop(self, it: int, silent = False) -> str:
+        # trainer = Trainer.load(modelPath)
 
-        if(it*self.interval > self.epochs): #last iteration
-            trainer.train(it*self.interval - self.epochs)
+        if(it*self._interval > self._epochs): #last iteration
+            self.trainer.train(it*self._interval - self._epochs)
         else:
-            trainer.train(self.interval)
+            self.trainer.train(self._interval)
 
-        trainedTo = min(self.epochs, it*self.interval)
+        trainedUntil = min(self._epochs, it*self._interval)
 
-        epochCompletness = f"{trainedTo}_{self.epochs}"
-        fileName = f"{filePath}/model_{epochCompletness}.pt"
-        LeNet5.save(fileName, trainer.model, trainer.optimizer)
+        epochCompletness = f"{trainedUntil}_{self._epochs}"
+        modelFileName = f"{self.pathBase}/model_{epochCompletness}.pt"
+        LeNet5.save(modelFileName, self.trainer.model, self.trainer.optimizer)
 
-        tester = Tester(trainer.model)
-        preds, labels = tester.test()
+        # tester = Tester(trainer.model)
+        self.tester.model = self.trainer.model
+        preds, labels = self.tester.test()
 
-        predPath = f"{filePath}/Predictions_{epochCompletness}.pt"
+        predPath = f"{self.pathBase}/Predictions_{epochCompletness}.pt"
         torch.save(preds, predPath)
+        labelPath = f"{self.pathBase}/Labels_{epochCompletness}.pt"
+        torch.save(labels, labelPath)
 
         if(not silent):
-            print(f'Checkpoint {it} | {trainedTo}/{self.epochs} epochs')
+            print(f'Checkpoint {it} | {trainedUntil}/{self._epochs} epochs')
 
         acc = Tester.getAccuracy(preds, labels)
         rec = Tester.getRecall(preds, labels)
         prec = Tester.getPrecision(preds, labels)
         f1 = Tester.getF1Score(preds, labels)
 
-        metricPath = f"{filePath}/Metrics.csv"
-        fields=[trainedTo, acc, prec, rec, f1]
+        self._appendMetricsToCSV(preds, labels, trainedUntil)
+
+        return modelFileName
+    
+    def _appendMetricsToCSV(self, preds:torch.Tensor, labels:torch.Tensor, epoch:int):
+        metricPath = f"{self.pathBase}/Metrics.csv"
+
+        if(not os.path.exists(metricPath)):
+            headers = ['Epoch', 'Accuracy', 'Precision', 'Recall', 'F1']
+            with open(metricPath, 'x') as file:
+                wr = writer(file)
+                wr.writerow(headers)
+
+        acc = Tester.getAccuracy(preds, labels)
+        rec = Tester.getRecall(preds, labels)
+        prec = Tester.getPrecision(preds, labels)
+        f1 = Tester.getF1Score(preds, labels)
+
+        # metricPath = f"{filePath}/Metrics.csv"
+        fields=[epoch, acc, prec, rec, f1]
         with open(metricPath, 'a') as file:
             wr = writer(file)
             wr.writerow(fields)
-
-        return fileName
