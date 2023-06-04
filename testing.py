@@ -61,22 +61,22 @@ class Tester:
     
     @staticmethod
     def getAccuracy(preds: torch.Tensor, labels: torch.Tensor):
-        acc = 100 * multiclass_accuracy(preds, labels).item()
+        acc = 100 * multiclass_accuracy(preds, labels, num_classes=10, average='macro').item()
         return acc
     
     @staticmethod
     def getPrecision(preds: torch.Tensor, labels: torch.Tensor):
-        prec = 100*multiclass_precision(preds, labels).item()
+        prec = 100*multiclass_precision(preds, labels, num_classes=10, average='macro').item()
         return prec
     
     @staticmethod
     def getRecall(preds: torch.Tensor, labels: torch.Tensor):
-        rec = 100 * multiclass_recall(preds, labels).item()
+        rec = 100 * multiclass_recall(preds, labels, num_classes=10, average='macro').item()
         return rec
 
     @staticmethod
     def getF1Score(preds: torch.Tensor, labels: torch.Tensor):
-        f1 = 100 * multiclass_f1_score(preds, labels).item()
+        f1 = 100 * multiclass_f1_score(preds, labels, num_classes=10, average='macro').item()
         return f1
 
     @staticmethod
