@@ -1,28 +1,41 @@
 from checkpoints import CheckpointTrainer
-from lenet import LeNet5
-from utils import get_optimizer
+from lenet import LeNet5, LeNet5ReLU, LeNet5AvgPool, LeNet5ReLUAvgPool
+from utils import get_optimizer, print_model_info
 
-LEARNING_RATE = 0.001
-EPOCHS = 5
-CP_INTERVAL = 1
+LEARNING_RATES = (0.1, 0.01, 0.001, 0.0001)
 
-def init():
-    model = LeNet5()
-    optimizer = get_optimizer(model, LEARNING_RATE)
-    run_info = {
-        'learningRate': LEARNING_RATE,
+EPOCHS = 10
+INTERVAL = 1
+
+METRICS_PATH = 'metrics.csv'
+
+def create_info(learning_rate: int, model: LeNet5):
+    return {
+        'learningRate': learning_rate,
         'epochs': EPOCHS,
-        'chekpointInterval': CP_INTERVAL
+        'chekpointInterval': INTERVAL,
+        'modelType': type(model).__name__
     }
 
-    return model, optimizer, run_info
+
+def create_models():
+    yield LeNet5()
+    yield LeNet5ReLU()
+    yield LeNet5AvgPool()
+    yield LeNet5ReLUAvgPool()
+
+
+def run_tests():
+    for lr in LEARNING_RATES:
+        for model in create_models():
+            optimizer = get_optimizer(model, lr)
+            runner = CheckpointTrainer(model, optimizer, METRICS_PATH)
+            runner.start(EPOCHS, INTERVAL, run_info=create_info(lr, model))
+            print_model_info(model)
 
 
 def main():
-    model, optimizer, run_info = init()
-    runner = CheckpointTrainer(model, optimizer)
-
-    runner.start(EPOCHS, CP_INTERVAL, run_info=run_info)
+    run_tests()
 
 
 if __name__ == '__main__':

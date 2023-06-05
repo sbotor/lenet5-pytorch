@@ -1,22 +1,21 @@
-from enum import Enum
 from torch import Tensor
 import torch.nn as nn
 import torch
 
-_TANH_SCALE = 1.7159
+class ScaledTanh(nn.Tanh):
+    def __init__(self, scale: float = 1):
+        super().__init__()
+
+        self.scale = scale
+
+    def forward(self, input: Tensor) -> Tensor:
+        input = super().forward(input)
+        return input.mul(self.scale)
 
 class LeNet5(nn.Module):
     NUM_CLASSES = 10
 
-    class _ScaledTanh(nn.Tanh):
-        def __init__(self, scale: float = 1):
-            super().__init__()
-
-            self.scale = scale
-
-        def forward(self, input: Tensor) -> Tensor:
-            input = super().forward(input)
-            return input.mul(self.scale)
+    _TANH_SCALE = 1.7159
 
     def __init__(self):
         super().__init__()
@@ -29,7 +28,7 @@ class LeNet5(nn.Module):
         self.fc2 = nn.Linear(in_features=84, out_features=LeNet5.NUM_CLASSES)
 
         self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.activ = self._ScaledTanh(_TANH_SCALE)
+        self.activ = ScaledTanh(LeNet5._TANH_SCALE)
 
         self.epoch = 0
         self.loss_history = []
@@ -52,9 +51,31 @@ class LeNet5(nn.Module):
             'model_state': self.state_dict(),
             'loss_history': self.loss_history,
             'epoch': self.epoch,
-            'model_type': type(self).__name__
+            'model_type': self.get_model_type()
         }
 
     def setup(self, state: dict[str, any]):
         self.epoch = state['epoch']
         self.loss_history = state['loss_history']
+
+    def get_model_type(self):
+        return type(self).__name__
+
+class LeNet5ReLU(LeNet5):
+    def __init__(self):
+        super().__init__()
+
+        self.activ = nn.ReLU()
+
+class LeNet5AvgPool(LeNet5):
+    def __init__(self):
+        super().__init__()
+
+        self.pool = nn.AvgPool2d(kernel_size=2, stride=2)
+
+class LeNet5ReLUAvgPool(LeNet5):
+    def __init__(self):
+        super().__init__()
+
+        self.pool = nn.AvgPool2d(kernel_size=2, stride=2)
+        self.activ = nn.ReLU()

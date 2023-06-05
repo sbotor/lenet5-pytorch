@@ -1,7 +1,7 @@
 import torch
 from torchvision import transforms
 
-from lenet import LeNet5
+from lenet import LeNet5, LeNet5ReLU, LeNet5AvgPool, LeNet5ReLUAvgPool
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -34,8 +34,21 @@ def save_model(path: str, model: LeNet5, optimizer):
 
 
 def load_model(path: str):
+    def create_model(type_name: str):
+        match type_name:
+            case LeNet5.__name__:
+                return LeNet5()
+            case LeNet5ReLU.__name__:
+                return LeNet5ReLU()
+            case LeNet5AvgPool.__name__:
+                return LeNet5AvgPool()
+            case LeNet5ReLUAvgPool.__name__:
+                return LeNet5ReLUAvgPool()
+            case _:
+                raise ValueError(f'Invalid LeNet5 type {type_name}.')
+
     state = torch.load(path)
-    model = LeNet5()
+    model = create_model(state['model_type'])
 
     model.load_state_dict(state['model_state'])
     model.setup(state)
@@ -50,5 +63,5 @@ def format_loss(value: float):
     return f'{value:.4f}'
 
 
-def format_accuracy(value: float):
+def format_accuracy_percent(value: float):
     return f'{value:.2f}'

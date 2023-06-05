@@ -74,6 +74,9 @@ class Trainer:
             self.model.loss_history.append(epoch_loss)
             self._print_epoch_end(epoch_loss)
 
+    def get_learning_rate(self) -> float:
+        return self.optimizer.param_groups[0]['lr']
+
     def _print_step_end(self, loss):
         if self.silent or self.print_freq < 1:
             return
