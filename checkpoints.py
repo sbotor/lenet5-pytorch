@@ -24,6 +24,7 @@ class CheckpointTrainer:
         self.tester = Tester(model)
 
         self.metrics_path = metrics_path
+        self.metrics_epoch_offset = model.epoch
 
         self.store_tensors = True
 
@@ -77,9 +78,10 @@ class CheckpointTrainer:
         prec = Tester.getPrecision(preds, labels)
         f1 = Tester.getF1Score(preds, labels)
 
+        actual_epoch = self.metrics_epoch_offset + epoch
         now = datetime.datetime.now()
         fields = (now.isoformat(), self.trainer.get_learning_rate(),
-                  self.model.get_model_type(), epoch, acc, prec, rec, f1)
+                  self.model.get_model_type(), actual_epoch, acc, prec, rec, f1)
         with open(metricPath, 'a', newline='') as file:
             wr = writer(file)
             wr.writerow(fields)
