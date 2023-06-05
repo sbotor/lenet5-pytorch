@@ -1,10 +1,10 @@
 from checkpoints import CheckpointTrainer
 from lenet import LeNet5, LeNet5ReLU, LeNet5AvgPool, LeNet5ReLUAvgPool
-from utils import get_optimizer, print_model_info
+from utils import get_optimizer, print_model_info, DEVICE
 
 LEARNING_RATES = (0.1, 0.01, 0.001, 0.0001)
 
-EPOCHS = 10
+EPOCHS = 20
 INTERVAL = 1
 
 METRICS_PATH = 'metrics.csv'
@@ -35,6 +35,7 @@ def run_tests():
 
 
 def main():
+    print(f'--- Device: {DEVICE}')
     run_tests()
 
 
