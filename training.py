@@ -1,6 +1,6 @@
 import torch
 from lenet import LeNet5
-from utils import DATA_DIR, DEVICE, DATASET_TRANSFORM, BATCH_SIZE, format_loss, get_criterion
+from utils import DATA_DIR, DEVICE, DATASET_TRANSFORM, BATCH_SIZE, format_loss, get_criterion, load_model
 from torchvision import datasets
 from torch.utils.data import DataLoader
 
@@ -106,6 +106,6 @@ class Trainer:
 
     @staticmethod
     def load(path: str):
-        model, optim = LeNet5.load(path)
+        model, optim = load_model(path)
 
         return Trainer(model, optim)

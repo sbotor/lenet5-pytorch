@@ -1,3 +1,4 @@
+from enum import Enum
 from torch import Tensor
 import torch.nn as nn
 import torch
@@ -45,28 +46,15 @@ class LeNet5(nn.Module):
         x = self.fc2(x)
 
         return x
-
-    @staticmethod
-    def save(path: str, model: 'LeNet5', optimizer,):
-        state = {
-            'model_state': model.state_dict(),
-            'optimizer_state': optimizer.state_dict(),
-            'loss_history': model.loss_history,
-            'epoch': model.epoch
+    
+    def create_state(self):
+        return {
+            'model_state': self.state_dict(),
+            'loss_history': self.loss_history,
+            'epoch': self.epoch,
+            'model_type': type(self).__name__
         }
 
-        torch.save(state, path)
-
-    @staticmethod
-    def load(path: str):
-        state = torch.load(path)
-        model = LeNet5()
-
-        model.load_state_dict(state['model_state'])
-        model.epoch = state['epoch']
-        model.loss_history = state['loss_history']
-
-        optimizer = torch.optim.Adam(model.parameters())
-        optimizer.load_state_dict(state['optimizer_state'])
-
-        return model, optimizer
+    def setup(self, state: dict[str, any]):
+        self.epoch = state['epoch']
+        self.loss_history = state['loss_history']
