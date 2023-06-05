@@ -2,20 +2,20 @@ from torch import Tensor
 import torch.nn as nn
 import torch
 
-_TANH_SCALE = 1.7159
+class ScaledTanh(nn.Tanh):
+    def __init__(self, scale: float = 1):
+        super().__init__()
+
+        self.scale = scale
+
+    def forward(self, input: Tensor) -> Tensor:
+        input = super().forward(input)
+        return input.mul(self.scale)
 
 class LeNet5(nn.Module):
     NUM_CLASSES = 10
 
-    class _ScaledTanh(nn.Tanh):
-        def __init__(self, scale: float = 1):
-            super().__init__()
-
-            self.scale = scale
-
-        def forward(self, input: Tensor) -> Tensor:
-            input = super().forward(input)
-            return input.mul(self.scale)
+    _TANH_SCALE = 1.7159
 
     def __init__(self):
         super().__init__()
@@ -28,7 +28,7 @@ class LeNet5(nn.Module):
         self.fc2 = nn.Linear(in_features=84, out_features=LeNet5.NUM_CLASSES)
 
         self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.activ = self._ScaledTanh(_TANH_SCALE)
+        self.activ = ScaledTanh(LeNet5._TANH_SCALE)
 
         self.epoch = 0
         self.loss_history = []
@@ -45,28 +45,37 @@ class LeNet5(nn.Module):
         x = self.fc2(x)
 
         return x
-
-    @staticmethod
-    def save(path: str, model: 'LeNet5', optimizer,):
-        state = {
-            'model_state': model.state_dict(),
-            'optimizer_state': optimizer.state_dict(),
-            'loss_history': model.loss_history,
-            'epoch': model.epoch
+    
+    def create_state(self):
+        return {
+            'model_state': self.state_dict(),
+            'loss_history': self.loss_history,
+            'epoch': self.epoch,
+            'model_type': self.get_model_type()
         }
 
-        torch.save(state, path)
+    def setup(self, state: dict[str, any]):
+        self.epoch = state['epoch']
+        self.loss_history = state['loss_history']
 
-    @staticmethod
-    def load(path: str):
-        state = torch.load(path)
-        model = LeNet5()
+    def get_model_type(self):
+        return type(self).__name__
 
-        model.load_state_dict(state['model_state'])
-        model.epoch = state['epoch']
-        model.loss_history = state['loss_history']
+class LeNet5ReLU(LeNet5):
+    def __init__(self):
+        super().__init__()
 
-        optimizer = torch.optim.Adam(model.parameters())
-        optimizer.load_state_dict(state['optimizer_state'])
+        self.activ = nn.ReLU()
 
-        return model, optimizer
+class LeNet5AvgPool(LeNet5):
+    def __init__(self):
+        super().__init__()
+
+        self.pool = nn.AvgPool2d(kernel_size=2, stride=2)
+
+class LeNet5ReLUAvgPool(LeNet5):
+    def __init__(self):
+        super().__init__()
+
+        self.pool = nn.AvgPool2d(kernel_size=2, stride=2)
+        self.activ = nn.ReLU()

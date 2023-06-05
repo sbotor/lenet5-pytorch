@@ -1,6 +1,6 @@
 import torch
 from lenet import LeNet5
-from utils import DATA_DIR, DEVICE, DATASET_TRANSFORM, BATCH_SIZE, format_loss, get_criterion
+from utils import DATA_DIR, DEVICE, DATASET_TRANSFORM, BATCH_SIZE, format_loss, get_criterion, load_model
 from torchvision import datasets
 from torch.utils.data import DataLoader
 
@@ -74,6 +74,9 @@ class Trainer:
             self.model.loss_history.append(epoch_loss)
             self._print_epoch_end(epoch_loss)
 
+    def get_learning_rate(self) -> float:
+        return self.optimizer.param_groups[0]['lr']
+
     def _print_step_end(self, loss):
         if self.silent or self.print_freq < 1:
             return
@@ -106,6 +109,6 @@ class Trainer:
 
     @staticmethod
     def load(path: str):
-        model, optim = LeNet5.load(path)
+        model, optim = load_model(path)
 
         return Trainer(model, optim)

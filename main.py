@@ -1,41 +1,41 @@
-from lenet import LeNet5
-from testing import Tester
-from training import Trainer
-from utils import LEARNING_RATE, print_model_info
-import torch
+from checkpoints import CheckpointTrainer
+from lenet import LeNet5, LeNet5ReLU, LeNet5AvgPool, LeNet5ReLUAvgPool
+from utils import get_optimizer, print_model_info
 
-MODEL_PATH = 'model.pt'
+LEARNING_RATES = (0.1, 0.01, 0.001, 0.0001)
 
-def _train_and_save(trainer: Trainer):
-    trainer.train(5)
+EPOCHS = 10
+INTERVAL = 1
 
-    LeNet5.save(MODEL_PATH, trainer.model, trainer.optimizer)
+METRICS_PATH = 'metrics.csv'
 
-def create_and_train():
-    model = LeNet5()
-    optim = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
-    trainer = Trainer(model, optim)
-    
-    _train_and_save(trainer)
+def create_info(learning_rate: int, model: LeNet5):
+    return {
+        'learningRate': learning_rate,
+        'epochs': EPOCHS,
+        'chekpointInterval': INTERVAL,
+        'modelType': type(model).__name__
+    }
 
-def load_and_train():
-    trainer = Trainer.load(MODEL_PATH)
 
-    _train_and_save(trainer)
+def create_models():
+    yield LeNet5()
+    yield LeNet5ReLU()
+    yield LeNet5AvgPool()
+    yield LeNet5ReLUAvgPool()
 
-def test():
-    tester = Tester.load(MODEL_PATH)
-    tester.test()
 
-def print_data():
-    model, _ = LeNet5.load(MODEL_PATH)
-    print_model_info(model)
+def run_tests():
+    for lr in LEARNING_RATES:
+        for model in create_models():
+            optimizer = get_optimizer(model, lr)
+            runner = CheckpointTrainer(model, optimizer, METRICS_PATH)
+            runner.start(EPOCHS, INTERVAL, run_info=create_info(lr, model))
+            print_model_info(model)
+
 
 def main():
-    load_and_train()
-    #create_and_train()
-    test()
-    print_data()
+    run_tests()
 
 
 if __name__ == '__main__':

@@ -5,7 +5,7 @@ from lenet import LeNet5
 
 from torcheval.metrics.functional import multiclass_accuracy, multiclass_precision, multiclass_f1_score, multiclass_recall
 
-from utils import BATCH_SIZE, DATASET_TRANSFORM, DEVICE, format_accuracy, get_criterion
+from utils import BATCH_SIZE, DATASET_TRANSFORM, DEVICE, format_accuracy_percent, get_criterion
 
 class Tester:
     def __init__(self, model: LeNet5):
@@ -43,7 +43,7 @@ class Tester:
                 i = end_i
 
         acc = 100 * multiclass_accuracy(all_preds, all_labels).item()
-        print(f'Accuracy: {format_accuracy(acc)}%')
+        print(f'Accuracy: {format_accuracy_percent(acc)}%')
 
         return all_preds, all_labels
 
@@ -61,22 +61,22 @@ class Tester:
     
     @staticmethod
     def getAccuracy(preds: torch.Tensor, labels: torch.Tensor):
-        acc = 100 * multiclass_accuracy(preds, labels, num_classes=10, average='macro').item()
+        acc = multiclass_accuracy(preds, labels, num_classes=LeNet5.NUM_CLASSES, average='macro').item()
         return acc
     
     @staticmethod
     def getPrecision(preds: torch.Tensor, labels: torch.Tensor):
-        prec = 100*multiclass_precision(preds, labels, num_classes=10, average='macro').item()
+        prec = multiclass_precision(preds, labels, num_classes=LeNet5.NUM_CLASSES, average='macro').item()
         return prec
     
     @staticmethod
     def getRecall(preds: torch.Tensor, labels: torch.Tensor):
-        rec = 100 * multiclass_recall(preds, labels, num_classes=10, average='macro').item()
+        rec = multiclass_recall(preds, labels, num_classes=LeNet5.NUM_CLASSES, average='macro').item()
         return rec
 
     @staticmethod
     def getF1Score(preds: torch.Tensor, labels: torch.Tensor):
-        f1 = 100 * multiclass_f1_score(preds, labels, num_classes=10, average='macro').item()
+        f1 = multiclass_f1_score(preds, labels, num_classes=LeNet5.NUM_CLASSES, average='macro').item()
         return f1
 
     @staticmethod
