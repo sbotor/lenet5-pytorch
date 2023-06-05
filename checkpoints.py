@@ -50,11 +50,6 @@ class CheckpointTrainer:
         if(not silent):
             print(f'Checkpoint {it} | {trainedUntil}/{self._epochs} epochs')
 
-        acc = Tester.getAccuracy(preds, labels)
-        rec = Tester.getRecall(preds, labels)
-        prec = Tester.getPrecision(preds, labels)
-        f1 = Tester.getF1Score(preds, labels)
-
         self._appendMetricsToCSV(preds, labels, trainedUntil)
     
     def _appendMetricsToCSV(self, preds:torch.Tensor, labels:torch.Tensor, epoch:int):
